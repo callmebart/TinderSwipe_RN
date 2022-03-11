@@ -45,8 +45,12 @@ export default function App() {
       onPanResponderMove: (_, gesture) => {
         pan.x.setValue(gesture.dx),
           pan.y.setValue(gesture.dy)
+        console.log(gesture.dx)
+        if (gesture.dx < 0) fadeInLike()
+
       },
       onPanResponderRelease: (e, gesture) => {
+
         if (gesture.moveX < windowWidth / 7) {
           console.log("move out left:")
           Animated.spring(
@@ -69,8 +73,9 @@ export default function App() {
           ).start(() => {
             resetCards()
           });
-        }else {
+        } else {
           console.log('move to zero')
+          fadeOutLike()
           Animated.spring(
             pan,
             {
@@ -86,7 +91,24 @@ export default function App() {
 
 
 
+  const opacity = useState(new Animated.Value(0))[0]
+  const fadeInLike = (opacity) => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      //easing: Easing.back(),
+     duration: 100,
+      useNativeDriver: false,
+    }).start()
+  }
 
+  const fadeOutLike = (opacity) => {
+    Animated.timing(opacity, {
+      toValue: 0,
+      //easing: Easing.back(),
+      //duration: 500,
+      useNativeDriver: false,
+    }).start()
+  }
   const renderCards = cards.map((item, index) => {
 
     if (item.url == null) return (
@@ -110,6 +132,9 @@ export default function App() {
           }}
           {...panResponder.panHandlers}
         >
+          <Animated.View style={{ ...styles.like, opacity: opacityLike }}>
+            <Text style={{fontWeight: 'bold', fontSize: 30, color: '#76eb00',}}>Like</Text>
+          </Animated.View>
           <Image key={index} source={item.url}
             style={styles.card} />
         </Animated.View>
@@ -144,6 +169,20 @@ const styles = StyleSheet.create({
     width: windowWidth - 20,
     height: windowHeight - 150,
     borderRadius: 15,
+  },
+  like: {
+    position: 'absolute',
+    zIndex: 1000,
+    left: 50,
+    top: 50,
+    borderRadius: 5, 
+    borderColor: '#76eb00', 
+    borderWidth: 5, 
+    paddingVertical: 5, 
+    paddingHorizontal: 12,
+    justifyContent:'center',
+    alignContent:'center',
+    transform: [{ rotate: '-40deg' }],
   },
 });
 
