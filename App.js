@@ -46,7 +46,14 @@ export default function App() {
         pan.x.setValue(gesture.dx),
           pan.y.setValue(gesture.dy)
         console.log(gesture.dx)
-        if (gesture.dx < 0) fadeInLike()
+        if (gesture.dx < 0){
+          fadeOutLike(opacityNope)
+          fadeInLike(opacityLike)
+        }
+        else{
+          fadeOutLike(opacityLike)
+          fadeInLike(opacityNope)
+        }
 
       },
       onPanResponderRelease: (e, gesture) => {
@@ -75,7 +82,8 @@ export default function App() {
           });
         } else {
           console.log('move to zero')
-          fadeOutLike()
+          fadeOutLike(opacityLike)
+          fadeOutLike(opacityNope)
           Animated.spring(
             pan,
             {
@@ -91,12 +99,12 @@ export default function App() {
 
 
 
-  const opacity = useState(new Animated.Value(0))[0]
+  const opacityLike = useState(new Animated.Value(0))[0]
+  const opacityNope = useState(new Animated.Value(0))[0]
   const fadeInLike = (opacity) => {
     Animated.timing(opacity, {
       toValue: 1,
-      //easing: Easing.back(),
-     duration: 100,
+      duration: 50,
       useNativeDriver: false,
     }).start()
   }
@@ -104,8 +112,7 @@ export default function App() {
   const fadeOutLike = (opacity) => {
     Animated.timing(opacity, {
       toValue: 0,
-      //easing: Easing.back(),
-      //duration: 500,
+      duration: 50,
       useNativeDriver: false,
     }).start()
   }
@@ -133,7 +140,10 @@ export default function App() {
           {...panResponder.panHandlers}
         >
           <Animated.View style={{ ...styles.like, opacity: opacityLike }}>
-            <Text style={{fontWeight: 'bold', fontSize: 30, color: '#76eb00',}}>Like</Text>
+            <Text style={{fontWeight: 'bold', fontSize: 30, color: '#00e400',}}>Like</Text>
+          </Animated.View>
+          <Animated.View style={{ ...styles.nope, opacity: opacityNope }}>
+            <Text style={{fontWeight: 'bold', fontSize: 30, color: '#e60000',}}>Nope</Text>
           </Animated.View>
           <Image key={index} source={item.url}
             style={styles.card} />
@@ -176,13 +186,27 @@ const styles = StyleSheet.create({
     left: 50,
     top: 50,
     borderRadius: 5, 
-    borderColor: '#76eb00', 
+    borderColor: '#00e400', 
     borderWidth: 5, 
     paddingVertical: 5, 
     paddingHorizontal: 12,
     justifyContent:'center',
     alignContent:'center',
     transform: [{ rotate: '-40deg' }],
+  },
+  nope:{
+    position: 'absolute',
+    zIndex: 1000,
+    right: 50,
+    top: 50,
+    borderRadius: 5, 
+    borderColor: '#e60000', 
+    borderWidth: 5, 
+    paddingVertical: 5, 
+    paddingHorizontal: 12,
+    justifyContent:'center',
+    alignContent:'center',
+    transform: [{ rotate: '40deg' }],
   },
 });
 
