@@ -1,42 +1,46 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Image, Dimensions, Animated, PanResponder, TouchableOpacity } from 'react-native';
 
 const windowWidth = Dimensions.get('window').width
 const windowHeight = Dimensions.get('window').height
 export default function App() {
+  useEffect(() => {
+    if (cards.length > 1) { setSelectedId(cards[cards.length - 1].id) }
+    if (cards.length > 2) setNextCardId(cards[cards.length - 2].id)
+  }, [])
 
   const [cards, setCards] = useState(
     [
-      { id: 0, url: null },
+      { id: 0, url: null, text: 'We have no more cards' },
       { id: 1, url: require('./assets/Marge.jpeg') },
       { id: 2, url: require('./assets/Mike.png') },
       { id: 3, url: require('./assets/Roz.png') }
     ]
   )
-  useEffect(() => {
-    console.log("user deleted")
-    if (cards.length > 1) { setSelectedId(cards[cards.length - 1].id) }
-  }, [cards])
-
-  const [selectedId, setSelectedId] = useState()
-
-  const pan = useState(new Animated.ValueXY())[0];
   let cardsAfterSwipe = cards.slice()
+  const [selectedId, setSelectedId] = useState()
+  const [nextCardId, setNextCardId] = useState()
+  const pan = useState(new Animated.ValueXY())[0];
+  const opacityLike = useState(new Animated.Value(0))[0]
+  const opacityNope = useState(new Animated.Value(0))[0]
+
   const resetCards = () => {
     if (cardsAfterSwipe.length > 0) {
       cardsAfterSwipe.pop()
       setCards(cardsAfterSwipe)
       setSelectedId(cardsAfterSwipe[cardsAfterSwipe.length - 1].id)
+      if (cardsAfterSwipe.length > 2)
+        setNextCardId(cardsAfterSwipe[cardsAfterSwipe.length - 2].id)
     }
     pan.flattenOffset()
     pan.x.setValue(0)
     pan.x.setValue(0)
   }
+
   const panResponder = useState(
     PanResponder.create({
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        console.log("pan")
         pan.setOffset({
           x: pan.x._value,
           y: pan.y._value,
@@ -45,21 +49,20 @@ export default function App() {
       onPanResponderMove: (_, gesture) => {
         pan.x.setValue(gesture.dx),
           pan.y.setValue(gesture.dy)
-        console.log(gesture.dx)
-        if (gesture.dx < 0){
+        if (gesture.dx < 0) {
           fadeOutLike(opacityNope)
           fadeInLike(opacityLike)
         }
-        else{
+        else {
           fadeOutLike(opacityLike)
           fadeInLike(opacityNope)
         }
-
       },
       onPanResponderRelease: (e, gesture) => {
-
+        fadeOutLike(opacityLike)
+        fadeOutLike(opacityNope)
+        //MOVE OUT LEFT -> LIKE
         if (gesture.moveX < windowWidth / 7) {
-          console.log("move out left:")
           Animated.spring(
             pan,
             {
@@ -70,7 +73,7 @@ export default function App() {
             resetCards()
           });
         } else if (gesture.moveX > windowWidth - windowWidth / 7) {
-          console.log("move out right:", pan.x)
+          //MOVE OUT RIGHT -> NOPE
           Animated.spring(
             pan,
             {
@@ -81,7 +84,7 @@ export default function App() {
             resetCards()
           });
         } else {
-          console.log('move to zero')
+          //MOVE TO DEFAULT POSSITION
           fadeOutLike(opacityLike)
           fadeOutLike(opacityNope)
           Animated.spring(
@@ -97,10 +100,6 @@ export default function App() {
   )[0];
 
 
-
-
-  const opacityLike = useState(new Animated.Value(0))[0]
-  const opacityNope = useState(new Animated.Value(0))[0]
   const fadeInLike = (opacity) => {
     Animated.timing(opacity, {
       toValue: 1,
@@ -116,18 +115,30 @@ export default function App() {
       useNativeDriver: false,
     }).start()
   }
-  const renderCards = cards.map((item, index) => {
 
-    if (item.url == null) return (
-      <Text>We have no more cards</Text>
+  const nextCardOpacity = useState(new Animated.Value(0))[0]
+  Animated.timing(nextCardOpacity, {
+    toValue: pan.x.interpolate({
+      inputRange: [-windowWidth / 2, 0, windowWidth / 2],
+      outputRange: [1, 0, 1],
+    }),
+    duration: 50,
+    useNativeDriver: false,
+  }).start()
+
+
+  const renderCards = cards.map((item) => {
+
+    if (item.url == null && (selectedId === 1 || selectedId === 0)) return (
+      <Text key={item.id} style={{}}>{item.text}</Text>
     )
+
     if (item.id === selectedId)
       return (
         <Animated.View
           style={{
-            position: 'absolute', transform: [
+            zIndex: 1, position: 'absolute', transform: [
               { translateX: pan.x },
-              // { translateY: pan.y },
               {
                 rotate: pan.x.interpolate({
                   inputRange: [-windowWidth / 2, 0, windowWidth / 2],
@@ -138,23 +149,23 @@ export default function App() {
             ]
           }}
           {...panResponder.panHandlers}
+          key={item.id}
         >
           <Animated.View style={{ ...styles.like, opacity: opacityLike }}>
-            <Text style={{fontWeight: 'bold', fontSize: 30, color: '#00e400',}}>Like</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 30, color: '#00e400', }}>Like</Text>
           </Animated.View>
           <Animated.View style={{ ...styles.nope, opacity: opacityNope }}>
-            <Text style={{fontWeight: 'bold', fontSize: 30, color: '#e60000',}}>Nope</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 30, color: '#e60000', }}>Nope</Text>
           </Animated.View>
-          <Image key={index} source={item.url}
+          <Image source={item.url}
             style={styles.card} />
         </Animated.View>
       )
-    else return (
-      <Animated.View
-        style={{
-          position: 'absolute'
-        }}>
-        <Image key={index} source={item.url}
+    else if (item.id === nextCardId) return (
+      <Animated.View style={{ zIndex: 1, position: 'absolute', opacity: nextCardOpacity }}
+        key={item.id}
+      >
+        <Image source={item.url}
           style={styles.card} />
       </Animated.View>
     )
@@ -185,27 +196,27 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     left: 50,
     top: 50,
-    borderRadius: 5, 
-    borderColor: '#00e400', 
-    borderWidth: 5, 
-    paddingVertical: 5, 
+    borderRadius: 5,
+    borderColor: '#00e400',
+    borderWidth: 5,
+    paddingVertical: 5,
     paddingHorizontal: 12,
-    justifyContent:'center',
-    alignContent:'center',
+    justifyContent: 'center',
+    alignContent: 'center',
     transform: [{ rotate: '-40deg' }],
   },
-  nope:{
+  nope: {
     position: 'absolute',
     zIndex: 1000,
     right: 50,
     top: 50,
-    borderRadius: 5, 
-    borderColor: '#e60000', 
-    borderWidth: 5, 
-    paddingVertical: 5, 
+    borderRadius: 5,
+    borderColor: '#e60000',
+    borderWidth: 5,
+    paddingVertical: 5,
     paddingHorizontal: 12,
-    justifyContent:'center',
-    alignContent:'center',
+    justifyContent: 'center',
+    alignContent: 'center',
     transform: [{ rotate: '40deg' }],
   },
 });
