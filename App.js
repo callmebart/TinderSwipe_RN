@@ -12,11 +12,18 @@ export default function App() {
   const [cards, setCards] = useState(
     [
       { id: 0, url: null, text: 'We have no more cards' },
-      { id: 1, url: require('./assets/Marge.jpeg') },
-      { id: 2, url: require('./assets/Mike.png') },
-      { id: 3, url: require('./assets/Roz.png') }
+      { id: 1, url: require('./assets/Marge.jpeg'),name:'Marge',age:'34',desc:'fulfilled and happy mother'},
+      { id: 2, url: require('./assets/Mike.png'),name:'Mike',age:'100',desc:'i really like kids'},
+      { id: 3, url: require('./assets/Roz.png') ,name:'Roz',age:'60',desc:'vigorous accountant'}
     ]
   )
+  const buttons = [
+    { id: 0, url: require('./assets/reload.png') },
+    { id: 1, url: require('./assets/x.png') },
+    { id: 2, url: require('./assets/star.png') },
+    { id: 3, url: require('./assets/heart.png') },
+    { id: 4, url: require('./assets/strike.png') },
+  ]
   let cardsAfterSwipe = cards.slice()
   const [selectedId, setSelectedId] = useState()
   const [nextCardId, setNextCardId] = useState()
@@ -102,7 +109,7 @@ export default function App() {
 
   const fadeInLike = (opacity) => {
     Animated.timing(opacity, {
-      toValue: 1,
+      toValue: 0.6,
       duration: 50,
       useNativeDriver: false,
     }).start()
@@ -130,14 +137,14 @@ export default function App() {
   const renderCards = cards.map((item) => {
 
     if (item.url == null && (selectedId === 1 || selectedId === 0)) return (
-      <Text key={item.id} style={{}}>{item.text}</Text>
+      <Text key={item.id} style={{marginTop:windowHeight/2-100,left:100}}>{item.text}</Text>
     )
 
     if (item.id === selectedId)
       return (
         <Animated.View
           style={{
-            zIndex: 1, position: 'absolute', transform: [
+            zIndex: 1, position: 'absolute',width:windowWidth, transform: [
               { translateX: pan.x },
               {
                 rotate: pan.x.interpolate({
@@ -152,13 +159,18 @@ export default function App() {
           key={item.id}
         >
           <Animated.View style={{ ...styles.like, opacity: opacityLike }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 30, color: '#00e400', }}>Like</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 30, color: '#03fc98', }}>Like</Text>
           </Animated.View>
           <Animated.View style={{ ...styles.nope, opacity: opacityNope }}>
             <Text style={{ fontWeight: 'bold', fontSize: 30, color: '#e60000', }}>Nope</Text>
           </Animated.View>
+
+          <Text style={styles.cardHeader}>{item.name}, {item.age}</Text>
+          <Text style={styles.cardDesc}>{item.desc}</Text>
+
           <Image source={item.url}
             style={styles.card} />
+            
         </Animated.View>
       )
     else if (item.id === nextCardId) return (
@@ -172,35 +184,54 @@ export default function App() {
 
   })
 
+  const renderButtons = buttons.map((item)=>{
+    return (
+      <TouchableOpacity key={item.id} style={[styles.button,styles.shadowProp]}>
+        <Image source={item.url} />
+      </TouchableOpacity>
+    )
+  })
+
   return (
     <View style={styles.container}>
+      <View style={{flex:1}}></View>
+      <View style={{flex:8}}>
       {renderCards}
+      </View>
+     
+      <View style={styles.buttonsView}> 
+          {renderButtons}
+      </View>
     </View>
   );
 }
 
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#f2f7f6',
+    //alignItems: 'center',
+    //justifyContent: 'center',
   },
   card: {
+    flex:6,
     width: windowWidth - 20,
-    height: windowHeight - 150,
+    height: windowHeight - 200,
     borderRadius: 15,
+    marginLeft:10
   },
   like: {
     position: 'absolute',
     zIndex: 1000,
     left: 50,
-    top: 50,
+    top: 200,
     borderRadius: 5,
-    borderColor: '#00e400',
+    borderColor: '#03fc98',
     borderWidth: 5,
     paddingVertical: 5,
-    paddingHorizontal: 12,
+    paddingHorizontal: 25,
     justifyContent: 'center',
     alignContent: 'center',
     transform: [{ rotate: '-40deg' }],
@@ -209,15 +240,54 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 1000,
     right: 50,
-    top: 50,
+    top: 200,
     borderRadius: 5,
     borderColor: '#e60000',
     borderWidth: 5,
     paddingVertical: 5,
-    paddingHorizontal: 12,
+    paddingHorizontal: 25,
     justifyContent: 'center',
     alignContent: 'center',
     transform: [{ rotate: '40deg' }],
+  },
+  button:{
+    width:60,
+    height:60,
+    borderRadius:30,
+    backgroundColor:'white',
+    justifyContent:'center',
+    alignItems:'center',   
+  },
+  buttonsView:{
+    flex:2,flexDirection:'row',
+    justifyContent:'space-between',
+    marginTop:40,
+    marginHorizontal:10
+  },
+  shadowProp: {
+    shadowColor: 'grey',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2},
+    shadowRadius: 70,
+    elevation: 3,
+  },
+  cardHeader:{
+    position:'absolute',
+    zIndex:2,
+    bottom:40,
+    color:'white',
+    fontSize:40,
+    fontFamily: 'normal',
+    marginLeft:30
+  },
+  cardDesc:{
+    position:'absolute',
+    zIndex:2,
+    bottom:20,
+    color:'white',
+    fontSize:20,
+    fontFamily: 'normal',
+    marginLeft:30
   },
 });
 
